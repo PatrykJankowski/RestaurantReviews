@@ -74,9 +74,6 @@ class DBHelper {
                 objectStore.transaction.oncomplete = function(event) {
                     // Store values in the newly created objectStore.
 
-                    console.log(typeof customerData);
-                    console.log(typeof restaurants);
-
                     var customerObjectStore = db.transaction("restaurants", "readwrite").objectStore("restaurants");
                     restaurants.forEach(function(rest) {
                         customerObjectStore.add(rest);

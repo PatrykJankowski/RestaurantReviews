@@ -2,11 +2,17 @@
 <html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="Restaurant Reviews App">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#4a90e2">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Normalize.css for better cross-browser consistency -->
     <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
-    <!-- Main CSS file -->
     <link rel="stylesheet" href="css/styles.css" type="text/css">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Restaurant Info</title>
 </head>
 
@@ -58,14 +64,17 @@
 
 <!-- Beginning scripts -->
 <!-- Database helpers -->
-<script type="text/javascript" src="js/dbhelper.js"></script>
+<script defer type="text/javascript" src="js/dbhelper.js"></script>
 <!-- Main javascript file -->
-<script type="text/javascript" src="js/restaurant_info.js"></script>
+<script defer type="text/javascript" src="js/restaurant_info.js"></script>
+<!--
+<script defer type="text/javascript" src="js/lazy.js"></script>
+-->
 <!-- Google Maps -->
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7stKiHO-j7crB0mbfabL9dQ9fVLson-g&libraries=places&callback=initMap"></script>
 <!-- End scripts -->
 
-<script>
+<script defer>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('js/sw.js')
     }

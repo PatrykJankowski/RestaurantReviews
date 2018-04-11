@@ -1,29 +1,27 @@
 var filesToCache = [
-    '../',
-    '../index.html',
-    '../restaurant.html',
-    '../img/',
-    '../img/1.jpg',
-    '../img/2.jpg',
-    '../img/3.jpg',
-    '../img/4.jpg',
-    '../img/5.jpg',
-    '../img/6.jpg',
-    '../img/7.jpg',
-    '../img/8.jpg',
-    '../img/9.jpg',
-    '../img/10.jpg',
-    '../img/undefined.jpg',
-    '../js/',
-    '../js/dbhelper.js',
-    '../js/main.js',
-    '../js/restaurant_info.js',
-    '../css/styles.css',
-    '../data/restaurants.json'
-
+    '/',
+    'index.html',
+    'restaurant.html',
+    'img/1.jpg',
+    'img/2.jpg',
+    'img/3.jpg',
+    'img/4.jpg',
+    'img/5.jpg',
+    'img/6.jpg',
+    'img/7.jpg',
+    'img/8.jpg',
+    'img/9.jpg',
+    'img/10.jpg',
+    'img/undefined.jpg',
+    'js/dbhelper.js',
+    'js/main.js',
+    'js/restaurant_info.js',
+    'css/styles.css',
+    'data/restaurants.json'
 ];
 
 var staticCacheName = 'cache-v1';
+
 
 self.addEventListener('install', function(event) {
     console.log('Attempting to install service worker and cache static assets');
@@ -33,65 +31,6 @@ self.addEventListener('install', function(event) {
                 return cache.addAll(filesToCache);
             })
     );
-
-
-    /*
-
-    /!**
-     * Save restaurants info to IndexedDb.
-     *!/
-
-    let restaurants = ;
-
-        // fetch all restaurants with proper error handling.
-        if (restaurants) { // Got the restaurant
-
-
-            if (!window.indexedDB) {
-                window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
-            }
-
-            const dbName = "restaurants-db";
-
-            var request = indexedDB.open(dbName, 1);
-
-            request.onerror = function(event) {
-                // Handle errors.
-            };
-            request.onupgradeneeded = function(event) {
-                var db = event.target.result;
-
-                // Create an objectStore to hold information about restaurants. We're
-                // going to use "id" as our key path because it's guaranteed to be unique
-                var objectStore = db.createObjectStore("restaurants", { keyPath: "id" });
-
-                // Create an index to search restaurants by name. We may have duplicates
-                // so we can't use a unique index.
-                objectStore.createIndex("name", 'name', { unique: false });
-
-
-                // Use transaction oncomplete to make sure the objectStore creation is
-                // finished before adding data into it.
-                objectStore.transaction.oncomplete = function(event) {
-                    // Store values in the newly created objectStore.
-
-                    console.log(typeof customerData);
-                    console.log(typeof restaurants);
-
-                    var customerObjectStore = db.transaction("restaurants", "readwrite").objectStore("restaurants");
-                    restaurants.forEach(function(rest) {
-                        customerObjectStore.add(rest);
-                    });
-                };
-            };
-        } else { // Restaurant does not exist in the database
-            callback('Restaurant does not exist', null);
-        }
-
-
-        */
-
-
 });
 
 
@@ -121,7 +60,6 @@ self.addEventListener('fetch', function(event) {
 });
 
 
-
 self.addEventListener('activate', function(event) {
     console.log('Activating new service worker...');
 
@@ -142,37 +80,7 @@ self.addEventListener('activate', function(event) {
 
 
 
-
 /*
-self.addEventListener('install', function(event) {
-    event.waitUntil(
-        caches.open('v1').then(function(cache) {
-            return cache.addAll(
-                [
-                    '/',
-                    '/index.html',
-                    '/restaurant.html',
-                    'img/1.jpg',
-                    'img/2.jpg',
-                    'img/3.jpg',
-                    'img/4.jpg',
-                    'img/5.jpg',
-                    'img/6.jpg',
-                    'img/7.jpg',
-                    'img/8.jpg',
-                    'img/9.jpg',
-                    'img/10.jpg',
-                    'js/dbhelper.js',
-                    'js/main.js',
-                    'js/restaurant_info.js',
-                    'css/style.css',
-                    'data/restaurant.json'
-                ]
-            );
-        })
-    );
-});
-
 self.addEventListener('fetch', function(event) {
     event.respondWith(
         caches.match(event.request)

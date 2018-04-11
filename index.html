@@ -39,24 +39,20 @@
   </section>
 </main>
 
-<script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
-<script type="application/javascript" charset="utf-8" src="js/main.js"></script>
-<script async defer src="//maps.googleapis.com/maps/api/js?key=AIzaSyA7stKiHO-j7crB0mbfabL9dQ9fVLson-g&libraries=places&callback=initMap"></script>
-<!--
-  <script type="application/javascript" charset="utf-8" src="js/idb.js"></script>
--->
-
-
 <footer id="footer">
   Copyright (c) 2017 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.
 </footer>
 
-<script>
+<script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
+<script type="application/javascript" charset="utf-8" src="js/main.js"></script>
+<script defer type="text/javascript" src="js/lazy.js"></script>
+<script async defer src="//maps.googleapis.com/maps/api/js?key=AIzaSyA7stKiHO-j7crB0mbfabL9dQ9fVLson-g&libraries=places&callback=initMap"></script>
+<script defer>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('js/sw.js')
+        navigator.serviceWorker.register('sw.js')
     }
 </script>
 
 </body>
 
-</>
+</html>
