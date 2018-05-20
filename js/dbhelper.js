@@ -12,6 +12,37 @@ class DBHelper {
         return `http://localhost:${port}/restaurants`;
     }
 
+    static get REVIEWS() {
+        const port = 1337; // Change this to your server port
+        return `http://localhost:${port}/reviews`;
+    }
+
+
+    /**
+     * Fetch all reviews.
+     */
+    static fetchReviews(callback) {
+
+        fetch(DBHelper.REVIEWS)
+            .then(
+                function(response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+
+                    // Examine the text in the response
+                    response.json().then(function(restaurants) {
+                        callback(null, restaurants);
+                    });
+                }
+            )
+            .catch(function(err) {
+                console.log('Fetch Error :-S', err);
+            });
+
+    }
+
     /**
      * Fetch all restaurants.
      */
@@ -105,6 +136,26 @@ class DBHelper {
             }
         });
     }
+
+
+
+    static fetchReviewById(id, callback) {
+        // fetch all restaurants with proper error handling.
+        DBHelper.fetchReviews((error, restaurants) => {
+            if (error) {
+                callback(error, null);
+            } else {
+                const restaurant = restaurants.find(r => r.id == id);
+                if (restaurant) { // Got the restaurant
+                    callback(null, restaurant);
+                } else { // Restaurant does not exist in the database
+                    callback('Restaurant does not exist', null);
+                }
+            }
+        });
+    }
+
+
 
     /**
      * Fetch restaurants by a cuisine type with proper error handling.

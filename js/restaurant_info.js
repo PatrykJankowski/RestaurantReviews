@@ -1,4 +1,5 @@
 let restaurant;
+let reviews;
 var map;
 
 /**
@@ -45,6 +46,18 @@ fetchRestaurantFromURL = (callback) => {
     }
 }
 
+/*fetchReviews = (callback) => {
+    DBHelper.fetchReviews((error, reviews) => {
+        self.reviews = reviews;
+        if (!reviews) {
+            console.error(error);
+            return;
+        }
+        //fillRestaurantHTML();
+        callback(null, reviews)
+    });
+};*/
+
 /**
  * Create restaurant HTML and add it to the webpage
  */
@@ -68,7 +81,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
         fillRestaurantHoursHTML();
     }
     // fill reviews
-    fillReviewsHTML();
+    fillReviewsHTML2();
 }
 
 /**
@@ -91,12 +104,77 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
     }
 }
 
+
+
+
+/*fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+    const container = document.getElementById('reviews-container');
+    const title = document.createElement('h3');
+    title.innerHTML = DBHelper.fetchReviews(reviews);
+    console.log(DBHelper.fetchReviews(reviews));
+    container.appendChild(title);
+
+    if (!reviews) {
+        const noReviews = document.createElement('p');
+        noReviews.innerHTML = 'No reviews yet!';
+        container.appendChild(noReviews);
+        return;
+    }
+    const ul = document.getElementById('reviews-list');
+    reviews.forEach(review => {
+        ul.appendChild(createReviewHTML(review));
+    });
+    container.appendChild(ul);
+}*/
+
+
+
+function fillReviewsHTML2() {
+    fetch('http://localhost:1337/reviews/?restaurant_id=' + getParameterByName('id'))
+        .then(
+            function(response) {
+                if (response.status !== 200) {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                    return;
+                }
+
+                // Examine the text in the response
+                response.json().then(function(reviews) {
+                    //console.log(restaurant_id);
+                    console.log(reviews);
+                    const container = document.getElementById('reviews-container');
+                    const title = document.createElement('h2');
+                    title.innerHTML = 'Reviews';
+                    container.appendChild(title);
+
+                    if (!reviews) {
+                        const noReviews = document.createElement('p');
+                        noReviews.innerHTML = 'No reviews yet!';
+                        container.appendChild(noReviews);
+                        return;
+                    }
+                    const ul = document.getElementById('reviews-list');
+                    reviews.forEach(review => {
+                        ul.appendChild(createReviewHTML(review));
+                    });
+                    container.appendChild(ul);
+                    //return restaurants;
+                });
+            }
+        )
+        .catch(function(err) {
+            console.log('Fetch Error :-S', err);
+        });
+}
+
+
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (reviews = fillReviewsHTML2()) => {
+    console.log(fillReviewsHTML2());
     const container = document.getElementById('reviews-container');
-    const title = document.createElement('h3');
+    const title = document.createElement('h2');
     title.innerHTML = 'Reviews';
     container.appendChild(title);
 
@@ -119,7 +197,8 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
 createReviewHTML = (review) => {
     const li = document.createElement('li');
     const nameAndDate = document.createElement('p');
-    nameAndDate.innerHTML = review.name + ", " + review.date;
+    let date = new Date(review.createdAt);
+    nameAndDate.innerHTML = `${review.name}, ${date.getDate()}.${date.getMonth()}.${date.getFullYear()}`;
     li.appendChild(nameAndDate);
 
     /*const date = document.createElement('p');
@@ -136,6 +215,7 @@ createReviewHTML = (review) => {
 
     return li;
 }
+
 
 /**
  * Add restaurant name to the breadcrumb navigation menu
