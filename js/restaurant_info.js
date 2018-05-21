@@ -167,6 +167,86 @@ function fillReviewsHTML2() {
         });
 }
 
+function addReview(name, rating, comment) {
+
+    if (name != null & rating != null & comment != null)
+        data = {
+            "restaurant_id": getParameterByName('id'),
+            "name": name,
+            "rating": rating,
+            "comments": comment
+        };
+
+    saveReview(name, rating, comment, 57);
+
+    return fetch('http://localhost:1337/reviews/', {
+        body: JSON.stringify(data), // must match 'Content-Type' header
+        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'same-origin', // include, same-origin, *omit
+        headers: {
+            'user-agent': 'Mozilla/4.0 MDN Example',
+            'content-type': 'application/json'
+        },
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, cors, *same-origin
+        redirect: 'follow', // manual, *follow, error
+        referrer: 'no-referrer', // *client, no-referrer
+    })
+        .then(response => response.json()) /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+}
+
+/**
+ * Save review to IndexedDb.
+ */
+function saveReview(name, rating, comment, id) {
+
+    // This works on all devices/browsers, and uses IndexedDBShim as a final fallback
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+
+    // Open (or create) the database
+    var open = indexedDB.open("reviews-db", 1);
+
+    // Create the schema
+    open.onupgradeneeded = function() {
+        var db = open.result;
+        var store = db.createObjectStore("Reviews", {keyPath: "id"});
+        var index = store.createIndex("NameIndex", "name");
+    };
+
+    open.onsuccess = function() {
+        // Start a new transaction
+        var db = open.result;
+        var tx = db.transaction("Reviews", "readwrite");
+        var store = tx.objectStore("Reviews");
+        var index = store.index("NameIndex");
+
+        // Add some data
+        store.add({id: id, name: name, rating: rating, comment: comment});
+
+        // Query the data
+        //var getJohn = store.get(22);
+        //var getBob = index.get(["Smith", "Bob"]);
+
+        //getJohn.onsuccess = function () {
+        //    console.log(getJohn.result.name);  // => "John"
+        //};
+
+        //getBob.onsuccess = function () {
+        //    console.log(getBob.result.name.first);   // => "Bob"
+        //};
+
+        // Close the db when the transaction is done
+        tx.oncomplete = function () {
+            db.close();
+        };
+    }
+
+    open.onerror = function () {
+        console.log(11111)
+    }
+
+};
+
 
 /**
  * Create all reviews HTML and add them to the webpage.

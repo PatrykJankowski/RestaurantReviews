@@ -52,11 +52,11 @@
     <section id="reviews-container">
         <ul id="reviews-list"></ul>
         <div id="reviews-add">
-            <form>
-                <textarea>
-
-                </textarea>
-                <button>Submit</button>
+            <form onsubmit="addReview(document.getElementById('name').value, document.getElementById('rating').value, document.getElementById('comment').value)">
+                <input type="text" id="name">
+                <input type="number" id="rating" min="1" max="5">
+                <input type="text" id="comment">
+                <input type="submit">
             </form>
         </div>
     </section>
