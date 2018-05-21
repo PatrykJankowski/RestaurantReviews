@@ -6,6 +6,28 @@ var map;
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
+
+    function check() {
+        fetch('http://localhost:1337/restaurants/?is_favorite=true')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(myJson) {
+                for (let key in myJson) {
+                    //console.log(myJson[key].is_favorite);
+                    if (myJson[key].id == getParameterByName('id')) {
+                        document.getElementById('fav').checked = true;
+                        return true;
+                    }
+                    else {
+                        document.getElementById('fav').checked = false;
+                    }
+                }
+            });
+    }
+
+    check();
+
     fetchRestaurantFromURL((error, restaurant) => {
         if (error) { // Got an error!
             console.error(error);
@@ -167,14 +189,37 @@ function fillReviewsHTML2() {
         });
 }
 
+function addToFavourites(flag) {
+
+    if (flag)
+        return fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {
+            headers: {
+                'user-agent': 'Mozilla/4.0 MDN Example',
+                'content-type': 'application/json'
+            },
+            method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        })
+            .then(response => console.log(response)); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+    else
+        return fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false`, {
+            headers: {
+                'user-agent': 'Mozilla/4.0 MDN Example',
+                'content-type': 'application/json'
+            },
+            method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        })
+            .then(response => console.log(response)); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+}
+
+
 function addReview(name, rating, comment) {
 
     if (name != null & rating != null & comment != null)
-        data = {
-            "restaurant_id": getParameterByName('id'),
-            "name": name,
-            "rating": rating,
-            "comments": comment
+        var data = {
+            'restaurant_id': getParameterByName('id'),
+            'name': name,
+            'rating': rating,
+            'comments': comment
         };
 
     saveReview(name, rating, comment, 57);
@@ -192,7 +237,7 @@ function addReview(name, rating, comment) {
         redirect: 'follow', // manual, *follow, error
         referrer: 'no-referrer', // *client, no-referrer
     })
-        .then(response => response.json()) /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+        .then(response => response.json()); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
 }
 
 /**
@@ -204,35 +249,35 @@ function saveReview(name, rating, comment, id) {
     var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 
     // Open (or create) the database
-    var open = indexedDB.open("reviews-db", 1);
+    var open = indexedDB.open('reviews-db', 1);
 
     // Create the schema
     open.onupgradeneeded = function() {
         var db = open.result;
-        var store = db.createObjectStore("Reviews", {keyPath: "id"});
-        var index = store.createIndex("NameIndex", "name");
+        var store = db.createObjectStore('Reviews', {keyPath: 'id'});
+        var index = store.createIndex('NameIndex', 'name');
     };
 
     open.onsuccess = function() {
         // Start a new transaction
         var db = open.result;
-        var tx = db.transaction("Reviews", "readwrite");
-        var store = tx.objectStore("Reviews");
-        var index = store.index("NameIndex");
+        var tx = db.transaction('Reviews', 'readwrite');
+        var store = tx.objectStore('Reviews');
+        var index = store.index('NameIndex');
 
         // Add some data
         store.add({id: id, name: name, rating: rating, comment: comment});
 
         // Query the data
         //var getJohn = store.get(22);
-        //var getBob = index.get(["Smith", "Bob"]);
+        //var getBob = index.get(['Smith', 'Bob']);
 
         //getJohn.onsuccess = function () {
-        //    console.log(getJohn.result.name);  // => "John"
+        //    console.log(getJohn.result.name);  // => 'John'
         //};
 
         //getBob.onsuccess = function () {
-        //    console.log(getBob.result.name.first);   // => "Bob"
+        //    console.log(getBob.result.name.first);   // => 'Bob'
         //};
 
         // Close the db when the transaction is done
