@@ -109,6 +109,8 @@ class DBHelper {
                     restaurants.forEach(function(rest) {
                         customerObjectStore.add(rest);
                     });
+
+                    db.close();
                 };
             };
         } else { // Restaurant does not exist in the database
