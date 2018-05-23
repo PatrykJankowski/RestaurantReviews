@@ -2,6 +2,45 @@ let restaurant;
 let reviews;
 var map;
 
+let cached_reviews;
+
+
+function clearDatabase() {
+    var DBOpenRequest = window.indexedDB.open("reviews-db", 1);
+
+    DBOpenRequest.onsuccess = function(event) {
+        // store the result of opening the database in the db variable.
+        // This is used a lot below
+        db = DBOpenRequest.result;
+
+        // Clear all the data form the object store
+        clearData();
+    };
+
+    function clearData() {
+        // open a read/write db transaction, ready for clearing the data
+        var transaction = db.transaction(["Reviews"], "readwrite");
+
+        // report on the success of the transaction completing, when everything is done
+        transaction.oncomplete = function(event) {
+        };
+
+        transaction.onerror = function(event) {
+        };
+
+        // create an object store on the transaction
+        var objectStore = transaction.objectStore("Reviews");
+
+        // Make a request to clear all the data out of the object store
+        var objectStoreRequest = objectStore.clear();
+
+        objectStoreRequest.onsuccess = function(event) {
+            // report the success of our request
+        };
+    };
+}
+
+
 /**
  * Initialize Google map, called from HTML.
  */
@@ -28,6 +67,67 @@ window.initMap = () => {
 
     check();
 
+
+
+
+
+
+
+
+    // Let us open our database
+    var DBOpenRequest = window.indexedDB.open("reviews-db", 1);
+
+    DBOpenRequest.onsuccess = function(event) {
+        console.log('Database initialised');
+
+        // store the result of opening the database in the db variable.
+        // This is used a lot below
+        db = DBOpenRequest.result;
+
+        // Run the getData() function to get the data from the database
+        getData();
+    };
+
+    function getData() {
+        // open a read/write db transaction, ready for retrieving the data
+        var transaction = db.transaction('Reviews', 'readwrite');
+
+        // report on the success of the transaction completing, when everything is done
+        transaction.oncomplete = function(event) {
+            console.log('Transaction completed');
+        };
+
+        transaction.onerror = function(event) {
+            console.log('Transaction not opened due to error:');
+        };
+
+        // create an object store on the transaction
+        var objectStore = transaction.objectStore("Reviews");
+
+        // Make a request to get a record by key from the object store
+        var objectStoreRequest = objectStore.getAll();
+
+        objectStoreRequest.onsuccess = function(event) {
+            // report the success of our request
+
+            var myRecord = objectStoreRequest.result;
+
+            for (record of myRecord) {
+                addReview(record.name, record.rating, record.comment, 66)
+            }
+
+
+        };
+
+    };
+
+
+
+
+
+
+
+
     fetchRestaurantFromURL((error, restaurant) => {
         if (error) { // Got an error!
             console.error(error);
@@ -41,19 +141,19 @@ window.initMap = () => {
             DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
         }
     });
-}
+};
 
 /**
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
     if (self.restaurant) { // restaurant already fetched!
-        callback(null, self.restaurant)
+        callback(null, self.restaurant);
         return;
     }
     const id = getParameterByName('id');
     if (!id) { // no id found in URL
-        error = 'No restaurant id in URL'
+        error = 'No restaurant id in URL';
         callback(error, null);
     } else {
         DBHelper.fetchRestaurantById(id, (error, restaurant) => {
@@ -66,7 +166,7 @@ fetchRestaurantFromURL = (callback) => {
             callback(null, restaurant)
         });
     }
-}
+};
 
 /*fetchReviews = (callback) => {
     DBHelper.fetchReviews((error, reviews) => {
@@ -104,7 +204,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     }
     // fill reviews
     fillReviewsHTML2();
-}
+};
 
 /**
  * Create restaurant operating hours HTML table and add it to the webpage.
@@ -124,7 +224,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 
         hours.appendChild(row);
     }
-}
+};
 
 
 
@@ -192,23 +292,9 @@ function fillReviewsHTML2() {
 function addToFavourites(flag) {
 
     if (flag)
-        return fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {
-            headers: {
-                'user-agent': 'Mozilla/4.0 MDN Example',
-                'content-type': 'application/json'
-            },
-            method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-        })
-            .then(response => console.log(response)); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+        fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {method: 'PUT'});
     else
-        return fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false`, {
-            headers: {
-                'user-agent': 'Mozilla/4.0 MDN Example',
-                'content-type': 'application/json'
-            },
-            method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-        })
-            .then(response => console.log(response)); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+        fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false`, {method: 'PUT'})
 }
 
 
@@ -222,7 +308,7 @@ function addReview(name, rating, comment) {
             'comments': comment
         };
 
-    saveReview(name, rating, comment, 57);
+    //saveReview(name, rating, comment, 58);
 
     return fetch('http://localhost:1337/reviews/', {
         body: JSON.stringify(data), // must match 'Content-Type' header
@@ -237,7 +323,11 @@ function addReview(name, rating, comment) {
         redirect: 'follow', // manual, *follow, error
         referrer: 'no-referrer', // *client, no-referrer
     })
-        .then(response => response.json()); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+        .then(response => console.log(response.json()))
+        .then(() => clearDatabase())
+        .catch(function(){
+            saveReview(name, rating, comment, 58)
+        }); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
 }
 
 /**
@@ -246,28 +336,40 @@ function addReview(name, rating, comment) {
 function saveReview(name, rating, comment, id) {
 
     // This works on all devices/browsers, and uses IndexedDBShim as a final fallback
-    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+    let indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 
     // Open (or create) the database
-    var open = indexedDB.open('reviews-db', 1);
+    let open = indexedDB.open('reviews-db', 1);
 
     // Create the schema
     open.onupgradeneeded = function() {
-        var db = open.result;
-        var store = db.createObjectStore('Reviews', {keyPath: 'id'});
-        var index = store.createIndex('NameIndex', 'name');
+        let db = open.result;
+        let store = db.createObjectStore('Reviews', {keyPath: 'name'});
+        let index = store.createIndex('NameIndex', 'name');
+/*
+        alert('upgrrrradeeee');
+*/
     };
 
+    /*open.onupgradeneeded = function(event) {
+        console.log('Performing upgrade');
+        var db = event.target.result;
+        console.log('Creating object store');
+        db.createObjectStore('mystore');
+    };
+*/
     open.onsuccess = function() {
         // Start a new transaction
-        var db = open.result;
-        var tx = db.transaction('Reviews', 'readwrite');
-        var store = tx.objectStore('Reviews');
-        var index = store.index('NameIndex');
+        let db = open.result;
+        let tx = db.transaction('Reviews', 'readwrite');
+        let store = tx.objectStore('Reviews');
+        let index = store.index('NameIndex');
 
         // Add some data
         store.add({id: id, name: name, rating: rating, comment: comment});
-
+/*
+        alert('aaaaaaaaaadddeeeddddddddddddddd');
+*/
         // Query the data
         //var getJohn = store.get(22);
         //var getBob = index.get(['Smith', 'Bob']);
@@ -284,13 +386,12 @@ function saveReview(name, rating, comment, id) {
         tx.oncomplete = function () {
             db.close();
         };
-    }
+    };
 
     open.onerror = function () {
-        console.log(11111)
     }
 
-};
+}
 
 
 /**
@@ -314,7 +415,7 @@ fillReviewsHTML = (reviews = fillReviewsHTML2()) => {
         ul.appendChild(createReviewHTML(review));
     });
     container.appendChild(ul);
-}
+};
 
 /**
  * Create review HTML and add it to the webpage.
@@ -339,7 +440,7 @@ createReviewHTML = (review) => {
     li.appendChild(comments);
 
     return li;
-}
+};
 
 
 /**
@@ -350,7 +451,7 @@ fillBreadcrumb = (restaurant=self.restaurant) => {
     const li = document.createElement('li');
     li.innerHTML = restaurant.name;
     breadcrumb.appendChild(li);
-}
+};
 
 /**
  * Get a parameter by name from page URL.
@@ -366,4 +467,4 @@ getParameterByName = (name, url) => {
     if (!results[2])
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
-}
+};

@@ -51,12 +51,13 @@
     <!-- Beginning reviews -->
     <section id="reviews-container">
         <ul id="reviews-list"></ul>
-        <input id="fav" type="checkbox" onclick="addToFavourites(document.getElementById('fav').checked)">
+        <label><input id="fav" type="checkbox" onclick="addToFavourites(document.getElementById('fav').checked)">Add to favorites</label>
         <div id="reviews-add">
+            <h3>Add review</h3>
             <form onsubmit="addReview(document.getElementById('name').value, document.getElementById('rating').value, document.getElementById('comment').value)">
-                <input type="text" id="name">
-                <input type="number" id="rating" min="1" max="5">
-                <input type="text" id="comment">
+                <label>Name: <input type="text" id="name"></label>
+                <label>Rating: <input type="number" id="rating" min="1" max="5"></label>
+                <label>Comment: <textarea id="comment"></textarea></label>
                 <input type="submit">
             </form>
         </div>
