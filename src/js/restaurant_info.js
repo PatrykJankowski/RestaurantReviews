@@ -2,7 +2,7 @@ let restaurant;
 let reviews;
 var map;
 
-let cached_reviews;
+//let cached_reviews;
 
 
 function clearDatabase() {
@@ -19,7 +19,7 @@ function clearDatabase() {
 
     function clearData() {
         // open a read/write db transaction, ready for clearing the data
-        var transaction = db.transaction(["Reviews"], "readwrite");
+        var transaction = db.transaction("reviews", "readwrite");
 
         // report on the success of the transaction completing, when everything is done
         transaction.oncomplete = function(event) {
@@ -29,7 +29,7 @@ function clearDatabase() {
         };
 
         // create an object store on the transaction
-        var objectStore = transaction.objectStore("Reviews");
+        var objectStore = transaction.objectStore("reviews");
 
         // Make a request to clear all the data out of the object store
         var objectStoreRequest = objectStore.clear();
@@ -69,43 +69,29 @@ window.initMap = () => {
 
 
 
+    // This works on all devices/browsers, and uses IndexedDBShim as a final fallback
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 
+    // Open (or create) the database
+    var open = indexedDB.open("reviews-db", 1);
 
-
-
-
-    // Let us open our database
-    var DBOpenRequest = window.indexedDB.open("reviews-db", 1);
-
-    DBOpenRequest.onsuccess = function(event) {
-        console.log('Database initialised');
-
-        // store the result of opening the database in the db variable.
-        // This is used a lot below
-        db = DBOpenRequest.result;
-
-        // Run the getData() function to get the data from the database
-        getData();
+    // Create the schema
+    open.onupgradeneeded = function() {
+        var db = open.result;
+        var store = db.createObjectStore("reviews", {keyPath: "id"});
+        var index = store.createIndex("NameIndex", "name");
     };
 
-    function getData() {
-        // open a read/write db transaction, ready for retrieving the data
-        var transaction = db.transaction('Reviews', 'readwrite');
+    open.onsuccess = function() {
+        // Start a new transaction
+        var db = open.result;
+        var tx = db.transaction("reviews", "readwrite");
+        var store = tx.objectStore("reviews");
+        var index = store.index("NameIndex");
 
-        // report on the success of the transaction completing, when everything is done
-        transaction.oncomplete = function(event) {
-            console.log('Transaction completed');
-        };
 
-        transaction.onerror = function(event) {
-            console.log('Transaction not opened due to error:');
-        };
 
-        // create an object store on the transaction
-        var objectStore = transaction.objectStore("Reviews");
-
-        // Make a request to get a record by key from the object store
-        var objectStoreRequest = objectStore.getAll();
+        var objectStoreRequest = store.getAll();
 
         objectStoreRequest.onsuccess = function(event) {
             // report the success of our request
@@ -113,18 +99,17 @@ window.initMap = () => {
             var myRecord = objectStoreRequest.result;
 
             for (record of myRecord) {
-                addReview(record.name, record.rating, record.comment, 66)
+                addReview(record.name, record.rating, record.comment)
             }
-
-
         };
 
+        // Close the db when the transaction is done
+        tx.oncomplete = function() {
+            db.close();
+        };
     };
 
-
-
-
-
+    clearDatabase();
 
 
 
@@ -290,7 +275,6 @@ function fillReviewsHTML2() {
 }
 
 function addToFavourites(flag) {
-
     if (flag)
         fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {method: 'PUT'});
     else
@@ -336,59 +320,45 @@ function addReview(name, rating, comment) {
 function saveReview(name, rating, comment, id) {
 
     // This works on all devices/browsers, and uses IndexedDBShim as a final fallback
-    let indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 
     // Open (or create) the database
-    let open = indexedDB.open('reviews-db', 1);
+    var open = indexedDB.open("reviews-db", 1);
 
     // Create the schema
     open.onupgradeneeded = function() {
-        let db = open.result;
-        let store = db.createObjectStore('Reviews', {keyPath: 'name'});
-        let index = store.createIndex('NameIndex', 'name');
-/*
-        alert('upgrrrradeeee');
-*/
+        var db = open.result;
+        var store = db.createObjectStore("reviews", {keyPath: "id"});
+        var index = store.createIndex("NameIndex", "name");
     };
 
-    /*open.onupgradeneeded = function(event) {
-        console.log('Performing upgrade');
-        var db = event.target.result;
-        console.log('Creating object store');
-        db.createObjectStore('mystore');
-    };
-*/
     open.onsuccess = function() {
         // Start a new transaction
-        let db = open.result;
-        let tx = db.transaction('Reviews', 'readwrite');
-        let store = tx.objectStore('Reviews');
-        let index = store.index('NameIndex');
+        var db = open.result;
+        var tx = db.transaction("reviews", "readwrite");
+        var store = tx.objectStore("reviews");
+        var index = store.index("NameIndex");
 
         // Add some data
-        store.add({id: id, name: name, rating: rating, comment: comment});
-/*
-        alert('aaaaaaaaaadddeeeddddddddddddddd');
-*/
-        // Query the data
-        //var getJohn = store.get(22);
-        //var getBob = index.get(['Smith', 'Bob']);
+        store.put({id: id, name: name, rating: rating, comment: comment});
+        //store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
 
-        //getJohn.onsuccess = function () {
-        //    console.log(getJohn.result.name);  // => 'John'
-        //};
+        /*// Query the data
+        var getJohn = store.get(67890);
+        //var getBob = index.get(["Smith", "Bob"]);
 
-        //getBob.onsuccess = function () {
-        //    console.log(getBob.result.name.first);   // => 'Bob'
-        //};
+        getJohn.onsuccess = function() {
+            console.log(getJohn.result.name.first);  // => "John"
+        };
+
+        getBob.onsuccess = function() {
+            console.log(getBob.result.name.first);   // => "Bob"
+        };*/
 
         // Close the db when the transaction is done
-        tx.oncomplete = function () {
+        tx.oncomplete = function() {
             db.close();
         };
-    };
-
-    open.onerror = function () {
     }
 
 }
