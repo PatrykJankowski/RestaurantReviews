@@ -16,11 +16,22 @@ var filesToCache = [
     'js/dbhelper.js',
     'js/main.js',
     'js/restaurant_info.js',
-    'css/styles.css',
-    'data/restaurants.json'
+    'css/styles.css'
 ];
 
 var staticCacheName = 'cache-v1';
+
+
+self.addEventListener('sync', function(event) {
+    if (event.tag == 'add-review') {
+        event.waitUntil(
+            caches.open(staticCacheName)
+                .then(function(cache) {
+                    return cache.addAll(filesToCache);
+                })
+        );
+    }
+});
 
 
 self.addEventListener('install', function(event) {

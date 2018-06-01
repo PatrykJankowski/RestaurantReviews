@@ -53,11 +53,11 @@
         <ul id="reviews-list"></ul>
         <label><input id="fav" type="checkbox" onclick="addToFavourites(document.getElementById('fav').checked)">Add to favorites</label>
         <div id="reviews-add">
-            <h3>Add review</h3>
-            <form onsubmit="addReview(document.getElementById('name').value, document.getElementById('rating').value, document.getElementById('comment').value)">
-                <label>Name: <input type="text" id="name"></label>
-                <label>Rating: <input type="number" id="rating" min="1" max="5"></label>
-                <label>Comment: <textarea id="comment"></textarea></label>
+            <h3 id="reviews-header">Add review</h3>
+            <form id="reviews-form" onsubmit="addReview(document.getElementById('name').value, document.getElementById('rating').value, document.getElementById('comment').value); return false">
+                <label>Name: <input type="text" id="name" required></label>
+                <label>Rating: <input type="number" id="rating" min="1" max="5" required></label>
+                <label>Comment: <textarea id="comment" required></textarea></label>
                 <input type="submit">
             </form>
         </div>
@@ -85,9 +85,137 @@
 <!-- End scripts -->
 
 <script defer>
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
+            .then(registration => navigator.serviceWorker.ready)
+            .then(registration => { // register sync
+                document.getElementById('requestButton').addEventListener('click', () => {
+                    registration.sync.register('add-review').then(() => {
+                        console.log('Sync registered');
+                    });
+                });
+            });
+
+        /*navigator.serviceWorker.ready.then(function(swRegistration) {
+            return swRegistration.sync.register('myFirstSync');
+        });*/
     }
+
+
+
+    // Connection Status
+    function isOnline () {
+
+
+
+        var connectionStatus = document.getElementById('reviews-header');
+
+        if (navigator.onLine) {
+
+            var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+            var open = indexedDB.open("reviews-db", 1);
+
+            // Create the schema
+            open.onupgradeneeded = function() {
+                var db = open.result;
+                var store = db.createObjectStore("reviews", {keyPath: "id"});
+                var index = store.createIndex("NameIndex", "name");
+            };
+
+            open.onsuccess = function() {
+                // Start a new transaction
+                var db = open.result;
+                var tx = db.transaction("reviews", "readwrite");
+                var store = tx.objectStore("reviews");
+                var index = store.index("NameIndex");
+
+                var objectStoreRequest = store.getAll();
+
+                objectStoreRequest.onsuccess = function(event) {
+                    var myRecord = objectStoreRequest.result;
+
+                    for (record of myRecord) {
+                        addReview(record.name, record.rating, record.comment)
+                    }
+                };
+
+                tx.oncomplete = function() {
+                    db.close();
+                };
+            };
+
+
+
+
+
+            /*getParameterByName = (name, url) => {
+                if (!url)
+                    url = window.location.href;
+                name = name.replace(/[\[\]]/g, '\\$&');
+                const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`),
+                    results = regex.exec(url);
+                if (!results)
+                    return null;
+                if (!results[2])
+                    return '';
+                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            };
+            if (document.getElementById('fav').checked == true) {
+                fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {method: 'PUT'});
+            } else {
+                fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false'`, {method: 'PUT'});
+
+            }*/
+
+
+
+
+            var iDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+            iopen = iDB.open("favorite-db", 1);
+
+            // Create the schema
+            iopen.onupgradeneeded = function() {
+                var adb = iopen.result;
+                var astore = adb.createObjectStore("favorite", {keyPath: "id"});
+                var aindex = astore.createIndex("NameIndex", "id");
+            };
+
+            iopen.onsuccess = function() {
+                // Start a new transaction
+                var adb = iopen.result;
+                var atx = adb.transaction("favorite", "readwrite");
+                var astore = atx.objectStore("favorite");
+                var aindex = astore.index("NameIndex");
+
+                var aobjectStoreRequest = astore.getAll();
+
+                aobjectStoreRequest.onsuccess = function(event) {
+                    var amyRecord = aobjectStoreRequest.result;
+
+                    for (record of amyRecord) {
+                        addToFavourites(record.flag)
+                    }
+                };
+
+                atx.oncomplete = function() {
+                    adb.close();
+                };
+            };
+
+
+            //clearDatabase();
+
+
+        } else {
+            connectionStatus.innerHTML = 'You are currently offline. Any requests made will be queued and synced as soon as you are connected again.';
+        }
+    }
+
+    window.addEventListener('online', isOnline);
+    window.addEventListener('offline', isOnline);
+    isOnline();
+
 </script>
 
 </body>

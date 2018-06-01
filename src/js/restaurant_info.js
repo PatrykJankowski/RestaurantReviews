@@ -69,50 +69,6 @@ window.initMap = () => {
 
 
 
-    // This works on all devices/browsers, and uses IndexedDBShim as a final fallback
-    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
-
-    // Open (or create) the database
-    var open = indexedDB.open("reviews-db", 1);
-
-    // Create the schema
-    open.onupgradeneeded = function() {
-        var db = open.result;
-        var store = db.createObjectStore("reviews", {keyPath: "id"});
-        var index = store.createIndex("NameIndex", "name");
-    };
-
-    open.onsuccess = function() {
-        // Start a new transaction
-        var db = open.result;
-        var tx = db.transaction("reviews", "readwrite");
-        var store = tx.objectStore("reviews");
-        var index = store.index("NameIndex");
-
-
-
-        var objectStoreRequest = store.getAll();
-
-        objectStoreRequest.onsuccess = function(event) {
-            // report the success of our request
-
-            var myRecord = objectStoreRequest.result;
-
-            for (record of myRecord) {
-                addReview(record.name, record.rating, record.comment)
-            }
-        };
-
-        // Close the db when the transaction is done
-        tx.oncomplete = function() {
-            db.close();
-        };
-    };
-
-    clearDatabase();
-
-
-
     fetchRestaurantFromURL((error, restaurant) => {
         if (error) { // Got an error!
             console.error(error);
@@ -212,30 +168,6 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 };
 
 
-
-
-/*fillReviewsHTML = (reviews = self.restaurant.reviews) => {
-    const container = document.getElementById('reviews-container');
-    const title = document.createElement('h3');
-    title.innerHTML = DBHelper.fetchReviews(reviews);
-    console.log(DBHelper.fetchReviews(reviews));
-    container.appendChild(title);
-
-    if (!reviews) {
-        const noReviews = document.createElement('p');
-        noReviews.innerHTML = 'No reviews yet!';
-        container.appendChild(noReviews);
-        return;
-    }
-    const ul = document.getElementById('reviews-list');
-    reviews.forEach(review => {
-        ul.appendChild(createReviewHTML(review));
-    });
-    container.appendChild(ul);
-}*/
-
-
-
 function fillReviewsHTML2() {
     fetch('http://localhost:1337/reviews/?restaurant_id=' + getParameterByName('id'))
         .then(
@@ -275,6 +207,61 @@ function fillReviewsHTML2() {
 }
 
 function addToFavourites(flag) {
+
+
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+
+    // Open (or create) the database
+    var open = indexedDB.open("favorite-db", 1);
+
+    // Create the schema
+    open.onupgradeneeded = function() {
+        var db = open.result;
+        var store = db.createObjectStore("favorite", {keyPath: "id"});
+        var index = store.createIndex("NameIndex", "id");
+    };
+
+    open.onsuccess = function() {
+        // Start a new transaction
+        var db = open.result;
+        var tx = db.transaction("favorite", "readwrite");
+        var store = tx.objectStore("favorite");
+        var index = store.index("NameIndex");
+
+        if (flag)
+            flag = 1;
+        else flag = 0;
+        // Add some data
+        store.put({id: getParameterByName('id'), flag: flag});
+        //store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
+
+
+        //sprawdzic czy istnieje
+        var getJohn = store.get(2);
+        getJohn.onsuccess = function() {
+            console.log(getJohn.result.flag);  // => "John"
+        };
+
+        /*// Query the data
+        var getJohn = store.get(67890);
+        //var getBob = index.get(["Smith", "Bob"]);
+
+        getJohn.onsuccess = function() {
+            console.log(getJohn.result.name.first);  // => "John"
+        };
+
+        getBob.onsuccess = function() {
+            console.log(getBob.result.name.first);   // => "Bob"
+        };*/
+
+        // Close the db when the transaction is done
+        tx.oncomplete = function() {
+            db.close();
+        };
+    }
+
+
+
     if (flag)
         fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {method: 'PUT'});
     else
@@ -283,16 +270,15 @@ function addToFavourites(flag) {
 
 
 function addReview(name, rating, comment) {
+    console.log("asdsa")
+    if (name != null & rating != null & comment != null) {
 
-    if (name != null & rating != null & comment != null)
         var data = {
             'restaurant_id': getParameterByName('id'),
             'name': name,
             'rating': rating,
             'comments': comment
         };
-
-    //saveReview(name, rating, comment, 58);
 
     return fetch('http://localhost:1337/reviews/', {
         body: JSON.stringify(data), // must match 'Content-Type' header
@@ -308,10 +294,18 @@ function addReview(name, rating, comment) {
         referrer: 'no-referrer', // *client, no-referrer
     })
         .then(response => console.log(response.json()))
+        .then(() => {
+            document.getElementById("reviews-form").style.display = "none";
+            document.getElementById("reviews-header").innerText = "Review added!"
+        })
         .then(() => clearDatabase())
         .catch(function(){
+            document.getElementById("reviews-form").style.display = "none";
+            document.getElementById("reviews-header").innerText = "Review will be added if you are online!";
             saveReview(name, rating, comment, 58)
-        }); /*.then(() => saveReview(name, rating, comment, 56))*/ // parses response to JSON
+        });
+
+    }
 }
 
 /**
