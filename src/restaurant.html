@@ -55,10 +55,10 @@
         <div id="reviews-add">
             <h3 id="reviews-header">Add review</h3>
             <form id="reviews-form" onsubmit="addReview(document.getElementById('name').value, document.getElementById('rating').value, document.getElementById('comment').value); return false">
-                <label>Name: <input type="text" id="name" required></label>
-                <label>Rating: <input type="number" id="rating" min="1" max="5" required></label>
-                <label>Comment: <textarea id="comment" required></textarea></label>
-                <input type="submit">
+                <label>Name: <input role="textbox" contenteditable="true" type="text" id="name" aria-required="true" required></label>
+                <label>Rating: <input role="textbox" contenteditable="true" type="number" id="rating" min="1" max="5" aria-required="true" required></label>
+                <label>Comment: <textarea role="textbox" contenteditable="true" aria-multiline="true" aria-required="true" id="comment" required></textarea></label>
+                <input type="submit" role="button">
             </form>
         </div>
     </section>
@@ -90,16 +90,16 @@
         navigator.serviceWorker.register('sw.js')
             .then(registration => navigator.serviceWorker.ready)
             .then(registration => { // register sync
-                document.getElementById('requestButton').addEventListener('click', () => {
+                //document.getElementById('requestButton').addEventListener('click', function() {
                     registration.sync.register('add-review').then(() => {
                         console.log('Sync registered');
                     });
-                });
+                //});
             });
 
-        /*navigator.serviceWorker.ready.then(function(swRegistration) {
-            return swRegistration.sync.register('myFirstSync');
-        });*/
+        navigator.serviceWorker.ready.then(function(swRegistration) {
+            return swRegistration.sync.register('add-review');
+        });
     }
 
 
@@ -203,12 +203,73 @@
                 };
             };
 
+            function addToFavourites(flag) {
+
+
+                var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+
+                // Open (or create) the database
+                var open = indexedDB.open("favorite-db", 1);
+
+                // Create the schema
+                open.onupgradeneeded = function() {
+                    var db = open.result;
+                    var store = db.createObjectStore("favorite", {keyPath: "id"});
+                    var index = store.createIndex("NameIndex", "id");
+                };
+
+                open.onsuccess = function() {
+                    // Start a new transaction
+                    var db = open.result;
+                    var tx = db.transaction("favorite", "readwrite");
+                    var store = tx.objectStore("favorite");
+                    var index = store.index("NameIndex");
+
+                    if (flag) flag = 1;
+                    else flag = 0;
+
+                    // Add some data
+                    var x = store.put({id: 2, flag: flag});
+                    //store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
+
+
+                    x.onsuccess = function() {
+                        var getJohn = store.get(2);
+                        getJohn.onsuccess = function() {
+                            console.log(getJohn.result.flag);  // => "John"
+                            if (getJohn.result.flag) {
+                                fetch(`http://localhost:1337/restaurants/2/?is_favorite=true`, {method: 'PUT'})
+                                    .then(()=>document.getElementById('fav').checked = true);
+                            }
+                            else {
+                                fetch(`http://localhost:1337/restaurants/2/?is_favorite=false`, {method: 'PUT'})
+                                    .then(()=>document.getElementById('fav').checked = false);
+                            }
+
+                        };
+                    };
+
+
+
+                    tx.oncomplete = function() {
+                        db.close();
+                    };
+                }
+
+
+
+                if (flag)
+                    fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {method: 'PUT'});
+                else
+                    fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false`, {method: 'PUT'});
+            }
+
 
             //clearDatabase();
 
 
         } else {
-            connectionStatus.innerHTML = 'You are currently offline. Any requests made will be queued and synced as soon as you are connected again.';
+            //connectionStatus.innerHTML = 'You are currently offline. Any requests made will be queued and synced as soon as you are connected again.';
         }
     }
 

@@ -228,19 +228,30 @@ function addToFavourites(flag) {
         var store = tx.objectStore("favorite");
         var index = store.index("NameIndex");
 
-        if (flag)
-            flag = 1;
+        if (flag) flag = 1;
         else flag = 0;
+
         // Add some data
-        store.put({id: getParameterByName('id'), flag: flag});
+        var x = store.put({id: 2, flag: flag});
         //store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
 
 
-        //sprawdzic czy istnieje
-        var getJohn = store.get(2);
-        getJohn.onsuccess = function() {
-            console.log(getJohn.result.flag);  // => "John"
+        x.onsuccess = function() {
+            var getJohn = store.get(2);
+            getJohn.onsuccess = function() {
+                console.log(getJohn.result.flag);  // => "John"
+                if (getJohn.result.flag) {
+                    fetch(`http://localhost:1337/restaurants/2/?is_favorite=true`, {method: 'PUT'})
+                        .then(()=>document.getElementById('fav').checked = true);
+                }
+                else {
+                    fetch(`http://localhost:1337/restaurants/2/?is_favorite=false`, {method: 'PUT'})
+                        .then(()=>document.getElementById('fav').checked = false);
+                }
+
+            };
         };
+
 
         /*// Query the data
         var getJohn = store.get(67890);
@@ -265,7 +276,7 @@ function addToFavourites(flag) {
     if (flag)
         fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=true`, {method: 'PUT'});
     else
-        fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false`, {method: 'PUT'})
+        fetch(`http://localhost:1337/restaurants/${getParameterByName('id')}/?is_favorite=false`, {method: 'PUT'});
 }
 
 

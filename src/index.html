@@ -46,12 +46,18 @@
 
 <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
 <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
-<script defer type="text/javascript" src="js/lazy.js"></script>
 <script async defer src="//maps.googleapis.com/maps/api/js?key=AIzaSyA7stKiHO-j7crB0mbfabL9dQ9fVLson-g&libraries=places&callback=initMap"></script>
-<script defer>
+<script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
     }
+</script>
+<!--
+<script type="text/javascript" src="js/lazy.js"></script>
+-->
+<script src="https://rawgit.com/toddmotto/echo/master/dist/echo.js"></script>
+<script>
+    echo.init();
 </script>
 
 </body>
